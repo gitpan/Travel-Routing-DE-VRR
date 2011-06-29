@@ -1,0 +1,27 @@
+efa - unofficial efa.vrr.de command line client
+-----------------------------------------------
+
+* <http://finalrewind.org/projects/efa/>
+
+
+Dependencies
+------------
+
+ * perl version 5.10 or newer
+ * Class::Accessor
+ * Exception::Class
+ * XML::LibXML
+ * WWW::Mechanize
+
+
+Installation
+------------
+
+$ perl Build.PL
+$ ./Build
+$ sudo ./Build install
+
+See also the Module::Build documentation.
+
+You can then run 'man Travel::Routing::DE::VRR'.
+This distribution also ships the script 'efa', see 'man efa'.

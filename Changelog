@@ -1,0 +1,71 @@
+Travel::Routing::DE::VRR 1.04 - Wed Jun 29 2011
+
+    * efa: Remove --foo-type options, use --to city type:stop etc. instead
+    * Introducing Travel::Routing::DE::VRR
+    * New dependencies: Class::Accessor, Exception::Class
+
+efa 1.3 - Sun Jun 6 2010
+
+    * Rewrite efa parser using XML::LibXML (major performance improvement)
+    * Detect more efa.vrr.de errors (no routes found, invalid input data, etc.)
+
+efa 1.2 - Sat Jun 5 2010
+
+    * Rewrite efa parser using HTML::TreeBuilder::XPath
+    * Fixes information about late trains (was broken by efa.vrr.de changes)
+
+efa 1.1.2 - Wed May 12 2010
+
+    * Fix -v
+    * Fix --date DD.MM. (was incorrectly rejected)
+    * Fix support for empty --ignore-info
+    * Add some more argument verification
+
+efa 1.1.1 - Mon Apr 26 2010
+
+    * Add short options
+
+efa 1.1 - Sun Jan 17 2010
+
+    * Code cleanup and DRY-ing
+    * Add 'addr:foo' and 'poi:foo' as alternative to '--to-type poi' etc.
+
+efa 1.0.3 - Wed Dec 9 2009
+
+    * Further code cleanup
+    * Fixes a minor unicode-related glitch in the output formatting
+
+efa 1.0.2 - Sat Sep 12 2009
+
+    * Code cleanup
+    * --restrict is now --include
+
+efa 1.0.1 - Wed Jul 1 2009
+
+    * Fixed unicode handling (apparently efa.vrr.de got changed)
+    * Added support for some rare connections without timestamps
+    * --date: The year is now optional
+
+efa 1.0 - Sat May 23 2009
+
+    * Various parser improvements, especially for footways.
+    * Added --walk-speed option
+    * Added --bike option (take a bike with you)
+    * Except for "Mobilitätseinstellungen", the efa.vrr.de interface is now
+      completely supported
+
+efa 0.9.1 - Wed May 20 2009
+
+    * Added options:
+    + --exclude    - exclude certain train/transport types
+    + --max-change - limit maximum number of interchanges
+    + --prefer     - prefer connections based on speed/interchanges/walking
+    + --proximity  - take near stops into account for start/stop
+
+efa 0.9 - Sat May 16 2009
+
+    * Accept from, to and via city and stops
+    * Custom arrival/departure date/time
+    * Print extra infos (late trains etc.)
+    * Regex to ignore certain infos
+    * Restrict trains to anything/anything without ICE/local

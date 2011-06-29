@@ -1,0 +1,63 @@
+This file contains message digests of all files listed in MANIFEST,
+signed via the Module::Signature module, version 0.68.
+
+To verify the content in this distribution, first make sure you have
+Module::Signature installed, then type:
+
+    % cpansign -v
+
+It will check each file's integrity, as well as the signature's
+validity.  If "==> Signature verified OK! <==" is not displayed,
+the distribution may already have been compromised, and you should
+not run its Makefile.PL or Build.PL.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+SHA1 0aca00dced78f18414251d933a9cc94545244f5b Build.PL
+SHA1 725ed5eb9afc03c21a76b143aa175f0b56e3bb22 Changelog
+SHA1 d65b879e082bce30b6558be8051a21be6720b8e6 MANIFEST
+SHA1 e9141a88d383276f6cc2d47e7f3c2d5a0cd7b202 META.yml
+SHA1 dfbe02f42a61f4e96e03c3141af0355a71d2cdfe README
+SHA1 d4b2879cf45e1de39d4e6522e5ea42fb4e450ab4 bin/efa
+SHA1 cc3b487b1fc99f53c88e09e99411ec727ab56b88 lib/Travel/Routing/DE/VRR.pm
+SHA1 117ac50709f75fa99a8d572dd712f577e91c536e lib/Travel/Routing/DE/VRR/Exception.pod
+SHA1 d73787da6f3ff0fbb6ce78c04eead7f7980f1247 lib/Travel/Routing/DE/VRR/Route.pm
+SHA1 cf321c28343323757d89726efb0cd1a1215d3db8 lib/Travel/Routing/DE/VRR/Route/Part.pm
+SHA1 261db543570571077efcef95de8bb1ed54e2ca9e provides/zsh/completions/_efa
+SHA1 6cfaebdb4d57688b8ac50f3e840a99a48c15457b t/00-compile-pm.t
+SHA1 3adfc7da6082f15051da7fbda884723388738b61 t/01-compile-pl.t
+SHA1 fd251ffc56ca6e52020c906b61158f78b035679d t/10-pod.t
+SHA1 e6761ccbd53d81f80dd359d2a298f6fab68b64aa t/20-vrr.t
+SHA1 03c61137db01ab6c66d6d57c6de800033e8f2966 t/in/ambiguous
+SHA1 b090ebff2ae34df32f307c0a3cd5b90b7140044a t/in/e_hbf_b_hbf.ice
+SHA1 2653e00afa657bcaa7983046856314b3dfd2f485 t/in/e_hbf_du_hbf.ice
+SHA1 90fb6ff0cfe39ec7a4ed7eec2c48c62ca21a637c t/in/e_hbf_mh_hbf
+SHA1 45c2836cb02fda0befc7c014aa1e91fd849f08c7 t/in/e_martinstr_e_florastr
+SHA1 ae32311fc3fcc472bc8e8d859c334863c0e2b0ce t/in/e_werden_e_hbf
+SHA1 17b18a70d24e307826c7701b6ed38bb9e470de5c t/in/invalid_input
+SHA1 4b671309c970bc1c0ea0d9dd2f4094df1b246c86 t/in/no_connections
+SHA1 750c1b500bc0bf95c83b83670646624c8d97693a t/out/e_hbf_b_hbf.ice
+SHA1 368485420399cdc7b724f815e1a8790eeb3a4b70 t/out/e_hbf_b_hbf.ice.ignore_all
+SHA1 3c10463afe1249175c480148af33c6b8f0f321f3 t/out/e_hbf_du_hbf.ice
+SHA1 805181465d06c31f11d3c456276c9a747b7feafb t/out/e_hbf_mh_hbf
+SHA1 cb58b25096325a6080109f0323c42a80726b38a2 t/out/e_hbf_mh_hbf.ignore_none
+SHA1 7469ef9df305ac872ca14f85c6e99c53db9a3dd1 t/out/e_martinstr_e_florastr
+SHA1 a5f60da1ae99a74c798a8aa25dc92d8e469176fd t/out/e_werden_e_hbf
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJOCw6RAAoJEBANW/tRZuAFVQ0P/ia0QU1i2EXh5AU5KmwYriv5
+MqFL7RjaGmQd6XjZ7vHGfJMBGDtlgEMw6tCTOoFwUB9dIEYtYWwnfwU6bSKISdlu
+5xOr7k9BfzAoZDnIth/TCOHvQag6uffRb2gK26LviZWaGwvi5GqV+knwSWz2UT0b
+IMF0P8aMArsdgvekAvv7oMb7hKU3eMEYTEjJYXlOHbTxDtKqRpjfaQ5kfBukVFM0
+EBoG8CMZgiiR/HBq3hSL0RPQpZ8qnyQXq70YnuJpvOhnYKYB5G+924lNFncPgQHo
+XHNW8ZRwRh0/u3KB4mXO/0hSP/MBacXh2DRRxJBUR/6+Ve0G4kvFSdgcC9vX+Y7V
+3ZkvcmTSKPSbJe0ElqPy0qTlGobMrKoUqwKAwq7AU2tyuWAz//UMZ28VOGD0Y+AN
+Xd6/jshdQvHkOiWikk2pdpP0/MRi2oVTWPary9Kea48V78s1SDzuw/E2KAh6ngPq
+vBaKsLNDfUdGHdNnO+n2vqw6icWiJcUtSNYSE6m9UDs1td8cp1sTFEaHKQIrj442
+Fbyc1UE9J1bAbDyIFCjT2khwoMhY1UCpE9jE8hCP6+oiUdXEFvwYgegZgaBwCmGb
+TXYb1+W5ufcbMe9XDWcuNDWFV3QPDFmeQbF4WBY/hsTaagughPQHH2pWeBThcuEn
+j3iSy5BaA7LZXpq8T4t6
+=oRcb
+-----END PGP SIGNATURE-----
