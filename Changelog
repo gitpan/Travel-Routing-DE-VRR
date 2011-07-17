@@ -1,3 +1,12 @@
+Travel::Routing::DE::VRR 1.05 - Sun Jul 17 2011
+
+    * Documentation fixes (in a few places, the module was prefixed
+      Travel::Status instead of the correct Travel::Routing)
+    * Note that we need perl >= 5.10.1 because of the parent pragma
+
+    [efa]
+    * Fix connection error handler
+
 Travel::Routing::DE::VRR 1.04 - Wed Jun 29 2011
 
     * efa: Remove --foo-type options, use --to city type:stop etc. instead

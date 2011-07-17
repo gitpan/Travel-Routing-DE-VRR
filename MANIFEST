@@ -6,6 +6,7 @@ lib/Travel/Routing/DE/VRR/Exception.pod
 lib/Travel/Routing/DE/VRR/Route.pm
 lib/Travel/Routing/DE/VRR/Route/Part.pm
 MANIFEST			This list of files
+META.yml
 provides/zsh/completions/_efa
 README
 t/00-compile-pm.t
@@ -27,5 +28,4 @@ t/out/e_hbf_mh_hbf
 t/out/e_hbf_mh_hbf.ignore_none
 t/out/e_martinstr_e_florastr
 t/out/e_werden_e_hbf
-META.yml
 SIGNATURE    Added here by Module::Build

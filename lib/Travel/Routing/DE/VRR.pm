@@ -35,7 +35,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -627,7 +627,7 @@ Travel::Routing::DE::VRR - inofficial interface to the efa.vrr.de German itinera
 
 =head1 VERSION
 
-version 1.04
+version 1.05
 
 =head1 DESCRIPTION
 
@@ -786,9 +786,9 @@ It is best not to pass Unicode characters to B<Travel::Routing::DE::VRR>.
 
 =over
 
-=item * Travel::Status::DE::VRR::Exception(3pm)
+=item * Travel::Routing::DE::VRR::Exception(3pm)
 
-=item * Travel::Status::DE::VRR::Route(3pm)
+=item * Travel::Routing::DE::VRR::Route(3pm)
 
 =back
 

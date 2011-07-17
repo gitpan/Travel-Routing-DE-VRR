@@ -10,7 +10,7 @@ use Travel::Routing::DE::VRR;
 use Exception::Class;
 use Getopt::Long qw/:config no_ignore_case/;
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 my $ignore_info = 'Fahrradmitnahme';
 my $efa;
 my ( @from, @to, @via, $from_type, $to_type, $via_type );
@@ -56,7 +56,7 @@ sub handle_efa_exception {
 	}
 	if ( $e->isa('Travel::Routing::DE::VRR::Exception::Net') ) {
 		printf STDERR ( "Error: %s: %s\n", $e->description,
-			$e->http_errstr->as_string );
+			$e->http_response->as_string );
 		exit 2;
 	}
 	if ( $e->isa('Travel::Routing::DE::VRR::Exception::NoData') ) {
@@ -228,7 +228,7 @@ efa - unofficial efa.vrr.de command line client
 
 =head1 VERSION
 
-version 1.04
+version 1.05
 
 =head1 DESCRIPTION
 
@@ -366,7 +366,7 @@ Print version information
     3    efa.vrr.de did not return any parsable data
     4    efa.vrr.de error: ambiguous input
     5    efa.vrr.de error: no connections found
-    10   Unknown Travel::Status::DE::VRR error
+    10   Unknown Travel::Routing::DE::VRR error
     255  Other internal error
 
 =head1 CONFIGURATION
