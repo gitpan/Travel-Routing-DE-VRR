@@ -10,7 +10,7 @@ use Travel::Routing::DE::VRR;
 use Exception::Class;
 use Getopt::Long qw/:config no_ignore_case/;
 
-our $VERSION = '1.05';
+our $VERSION = '1.06';
 my $ignore_info = 'Fahrradmitnahme';
 my $efa;
 my ( @from, @to, @via, $from_type, $to_type, $via_type );
@@ -228,7 +228,7 @@ efa - unofficial efa.vrr.de command line client
 
 =head1 VERSION
 
-version 1.05
+version 1.06
 
 =head1 DESCRIPTION
 
@@ -375,8 +375,8 @@ None.
 
 =head1 DEPENDENCIES
 
-This script requires perl 5.10 (or higher) with the modules
-WWW::Mechanize and XML::LibXML.
+This script requires perl 5.10 (or higher) with the XML::LibXML module
+installed.
 
 =head1 BUGS AND LIMITATIONS
 

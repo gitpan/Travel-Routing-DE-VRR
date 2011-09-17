@@ -10,8 +10,8 @@ Dependencies
  * perl version 5.10.1 or newer
  * Class::Accessor
  * Exception::Class
+ * LWP::UserAgent
  * XML::LibXML
- * WWW::Mechanize
 
 
 Installation
