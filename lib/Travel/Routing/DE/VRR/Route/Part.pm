@@ -6,11 +6,15 @@ use 5.010;
 
 use parent 'Class::Accessor';
 
-our $VERSION = '1.06';
+our $VERSION = '2.00';
 
 Travel::Routing::DE::VRR::Route::Part->mk_ro_accessors(
-	qw(arrival_stop arrival_time departure_stop departure_time train_line
-	  train_destination)
+	qw(arrival_platform arrival_stop
+	  arrival_date arrival_time arrival_sdate arrival_stime
+	  delay departure_platform departure_stop
+	  departure_date departure_time departure_sdate departure_stime
+	  train_line train_destination
+	  )
 );
 
 sub new {
@@ -21,10 +25,38 @@ sub new {
 	return bless( $ref, $obj );
 }
 
+sub arrival_stop_and_platform {
+	my ($self) = @_;
+
+	if ( length( $self->arrival_platform ) ) {
+		return
+		  sprintf( '%s: %s', $self->get(qw(arrival_stop arrival_platform)) );
+	}
+	return $self->arrival_stop;
+}
+
+sub departure_stop_and_platform {
+	my ($self) = @_;
+
+	if ( length( $self->departure_platform ) ) {
+
+		return
+		  sprintf( '%s: %s',
+			$self->get(qw(departure_stop departure_platform)) );
+	}
+	return $self->arrival_stop;
+}
+
 sub extra {
 	my ($self) = @_;
 
 	return @{ $self->{extra} // [] };
+}
+
+sub via {
+	my ($self) = @_;
+
+	return @{ $self->{via} // [] };
 }
 
 1;
@@ -54,7 +86,7 @@ points, without interchanges
 
 =head1 VERSION
 
-version 1.06
+version 2.00
 
 =head1 DESCRIPTION
 
@@ -67,57 +99,92 @@ B<parts> method.
 
 =head1 METHODS
 
+=head2 ACCESSORS
+
+"Actual" in the description means that the delay (if available) is already
+included in the calculation, "Scheduled" means it isn't.
+
 =over
 
-=item $part = Travel::Routing::DE::VRR::Route::Part->new(I<%data>)
+=item $part->arrival_stop
 
-Creates a new Travel::Routing::DE::VRR::Route::Part object. I<data> consists of:
+arrival stop (city name plus station name)
 
-=over
+=item $part->arrival_platform
 
-=item B<arrival_time> => I<HH>:I<MM>
+arrival platform (either "Gleis x" or "Bstg. x")
 
-Arrival time
+=item $part->arrival_stop_and_platform
 
-=item B<arrival_stop> => I<name>
+"stop: platform" concatenation
 
-Arrival stop (city plus station / address)
+=item $part->arrival_date
 
-=item B<departure_time> => I<HH:MM>
+Actual arrival date in DD.MM.YYYY format
 
-Departure time
+=item $part->arrival_time
 
-=item B<departure_stop> => I<name>
+Actual arrival time in HH:MM format
 
-Departure stop (city plus station / address)
+=item $part->arrival_sdate
 
-=item B<train_destination> => I<name>
+Scheduled arrival date in DD.MM.YYYY format
 
-Destination of the train connecting the stops
+=item $part->arrival_stime
 
-=item B<train_line> => I<name>
+Scheduled arrival time in HH:MM format
 
-The train's line name.
+=item $part->delay
 
-=item B<extra> => B<[> [ I<line1>, [ I<line2> [ I<...> ] ] ] B<]>
+delay in minutes, 0 if unknown
 
-Additional information about this connection.  Array-ref of newline-terminated
-strings.
+=item $part->departure_stop
 
-=back
+departure stop (city name plus station name)
 
-=item $part->get(I<name>)
+=item $part->departure_platform
 
-Returns the value of I<name> (B<arrival_time>, B<arrival_stop> etc., see
-B<new>).
+departure platform (either "Gleis x" or "Bstg. x")
 
-Each of these I<names> also has an accessor. So C<< $part->departure_time() >>
-is the same as C<< $part->get('departure_time') >>.
+=item $part->departure_stop_and_platform
 
-=item $part->extra()
+"stop: platform" concatenation
 
-Returns a list of additional information about this route part, if provided.
-Returns an empty list otherwise.
+=item $part->departure_date
+
+Actual departure date in DD.MM.YYYY format
+
+=item $part->departure_time
+
+Actual departure time in HH:MM format
+
+=item $part->departure_sdate
+
+Scheduled departure date in DD.MM.YYYY format
+
+=item $part->departure_stime
+
+Scheduled departure time in HH:MM format
+
+=item $part->extra
+
+Additional information about the connection.  Returns a list of
+newline-terminated strings
+
+=item $part->train_destination
+
+destination of the line providing the connection
+
+=item $part->train_line
+
+name / number of the line
+
+=item $part->via
+
+List of stops passed between departure_stop and arrival_stop, as
+C<< [ "DD.MM.YYYY", "HH:MM", stop, platform ] >> hashrefs.
+
+May be empty, these are not always reported by efa.vrr.de.
 
 =back
 
@@ -135,11 +202,11 @@ None.
 
 =head1 BUGS AND LIMITATIONS
 
-None known.
+$part->via does not work reliably.
 
 =head1 SEE ALSO
 
-Travel::Routing::DE::VRR(3pm).
+Travel::Routing::DE::VRR(3pm), Class::Accessor(3pm).
 
 =head1 AUTHOR
 

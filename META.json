@@ -1,0 +1,58 @@
+{
+   "abstract" : "unofficial interface to the efa.vrr.de German itinerary service",
+   "author" : [
+      "Copyright (C) 2009-2011 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110440",
+   "license" : [
+      "unrestricted"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Travel-Routing-DE-VRR",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "File::Slurp" : 0,
+            "Test::Compile" : 0,
+            "Test::Fatal" : 0,
+            "Test::More" : 0,
+            "Test::Pod" : 0
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.38"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Class::Accessor" : 0,
+            "Exception::Class" : 0,
+            "Getopt::Long" : 0,
+            "LWP::UserAgent" : 0,
+            "XML::LibXML" : 0,
+            "perl" : "v5.10.1"
+         }
+      }
+   },
+   "provides" : {
+      "Travel::Routing::DE::VRR" : {
+         "file" : "lib/Travel/Routing/DE/VRR.pm",
+         "version" : "2.00"
+      },
+      "Travel::Routing::DE::VRR::Route" : {
+         "file" : "lib/Travel/Routing/DE/VRR/Route.pm",
+         "version" : "2.00"
+      },
+      "Travel::Routing::DE::VRR::Route::Part" : {
+         "file" : "lib/Travel/Routing/DE/VRR/Route/Part.pm",
+         "version" : "2.00"
+      }
+   },
+   "release_status" : "stable",
+   "version" : "2.00"
+}

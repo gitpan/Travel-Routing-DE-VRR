@@ -6,11 +6,13 @@ use strict;
 use warnings;
 use 5.010;
 
+use utf8;
+
 use Travel::Routing::DE::VRR;
 use Exception::Class;
 use Getopt::Long qw/:config no_ignore_case/;
 
-our $VERSION = '1.06';
+our $VERSION = '2.00';
 my $ignore_info = 'Fahrradmitnahme';
 my $efa;
 my ( @from, @to, @via, $from_type, $to_type, $via_type );
@@ -103,6 +105,34 @@ sub check_for_error {
 	return;
 }
 
+sub display_connection {
+	my ($c) = @_;
+
+	if ( $c->delay ) {
+		printf( "# +%d,  scheduled: %s -> %s\n",
+			$c->delay, $c->departure_stime, $c->arrival_stime );
+	}
+
+	for my $extra ( $c->extra ) {
+
+		if ( not( length $ignore_info and $extra =~ /$ignore_info/i ) ) {
+			say "# $extra";
+		}
+	}
+
+	printf(
+		"%-5s ab  %-30s %-20s %s\n",
+		$c->departure_time, $c->departure_stop_and_platform,
+		$c->train_line,     $c->train_destination,
+	);
+
+	printf( "%-5s an  %s\n\n",
+		$c->arrival_time, $c->arrival_stop_and_platform,
+	);
+
+	return;
+}
+
 #<<<
 GetOptions(
 	$opt,
@@ -112,6 +142,7 @@ GetOptions(
 		date|d=s
 		depart=s
 		exclude|e=s@
+		extended-info|E
 		from=s@{2}
 		help|h
 		ignore-info|I:s
@@ -188,22 +219,22 @@ check_for_error($@);
 my @routes = $efa->routes;
 
 for my $i ( 0 .. $#routes ) {
-	for my $c ( $routes[$i]->parts ) {
 
-		for my $extra ( $c->extra ) {
+	my $route = $routes[$i];
 
-			if ( not( length $ignore_info and $extra =~ /$ignore_info/i ) ) {
-				say "# $extra";
-			}
+	if ( $opt->{'extended-info'} ) {
+		print '# ' . $route->duration;
+		if ( $route->ticket_type ) {
+			printf( ", class %s (%s€ / %s€)\n\n",
+				$route->ticket_type, $route->fare_adult, $route->fare_child, );
 		}
+		else {
+			print "\n\n";
+		}
+	}
 
-		printf(
-			"%-5s ab  %-30s %-20s %s\n%-5s an  %-30s\n\n",
-			$c->get(
-				qw(departure_time departure_stop train_line
-				  train_destination arrival_time arrival_stop)
-			),
-		);
+	for my $c ( $route->parts ) {
+		display_connection($c);
 	}
 	if ( $i != $#routes ) {
 		print "------\n\n";
@@ -228,7 +259,7 @@ efa - unofficial efa.vrr.de command line client
 
 =head1 VERSION
 
-version 1.06
+version 2.00
 
 =head1 DESCRIPTION
 

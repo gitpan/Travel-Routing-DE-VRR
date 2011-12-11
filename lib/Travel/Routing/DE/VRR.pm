@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use 5.010;
 
+use Carp qw(cluck);
+use Encode qw(decode);
 use Travel::Routing::DE::VRR::Route;
 use LWP::UserAgent;
 use XML::LibXML;
@@ -35,7 +37,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '1.06';
+our $VERSION = '2.00';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -304,6 +306,7 @@ sub create_post {
 		name_destination                                   => q{},
 		name_origin                                        => q{},
 		name_via                                           => q{},
+		outputFormat                                       => 'XML',
 		placeInfo_destination                              => 'invalid',
 		placeInfo_origin                                   => 'invalid',
 		placeInfo_via                                      => 'invalid',
@@ -374,116 +377,6 @@ sub create_post {
 	return;
 }
 
-sub parse_initial {
-	my ($self) = @_;
-
-	my $tree = $self->{tree}
-	  = XML::LibXML->load_html( string => $self->{html_reply}, );
-
-	my $con_part = 0;
-	my $con_no;
-	my $cons = [];
-
-	my $xp_td  = XML::LibXML::XPathExpression->new('//table//table/tr/td');
-	my $xp_img = XML::LibXML::XPathExpression->new('./img');
-
-	foreach my $td ( @{ $tree->findnodes($xp_td) } ) {
-
-		my $colspan = $td->getAttribute('colspan') // 0;
-		my $class   = $td->getAttribute('class')   // q{};
-
-		if ( $colspan != 8 and $class !~ /^bgColor2?$/ ) {
-			next;
-		}
-
-		if ( $colspan == 8 ) {
-			if ( $td->textContent =~ m{ (?<no> \d+ ) [.] .+ Fahrt }x ) {
-				$con_no   = $+{no} - 1;
-				$con_part = 0;
-				next;
-			}
-		}
-
-		if ( $class =~ /^bgColor2?$/ ) {
-			if ( $class eq 'bgColor' and ( $con_part % 2 ) == 1 ) {
-				$con_part++;
-			}
-			elsif ( $class eq 'bgColor2' and ( $con_part % 2 ) == 0 ) {
-				$con_part++;
-			}
-		}
-
-		if (    defined $con_no
-			and not $td->exists($xp_img)
-			and $td->textContent !~ /^\s*$/ )
-		{
-			push( @{ $cons->[$con_no]->[$con_part] }, $td->textContent );
-		}
-	}
-
-	return $cons;
-}
-
-sub parse_pretty {
-	my ( $self, $con_parts ) = @_;
-
-	my @elements;
-	my @next_extra;
-
-	for my $con ( @{$con_parts} ) {
-
-		my $hash;
-
-		# Note: Changes @{$con} elements
-		foreach my $str ( @{$con} ) {
-			$str =~ s/[\s\n\t]+/ /gs;
-			$str =~ s/^ //;
-			$str =~ s/ $//;
-		}
-
-		if ( @{$con} < 5 ) {
-			@next_extra = @{$con};
-			next;
-		}
-
-		# @extra may contain undef values
-		foreach my $extra (@next_extra) {
-			if ($extra) {
-				push( @{ $hash->{extra} }, $extra );
-			}
-		}
-		@next_extra = undef;
-
-		if ( $con->[0] !~ / \d{2} : \d{2} /ox ) {
-			splice( @{$con}, 0, 0, q{} );
-			splice( @{$con}, 4, 0, q{} );
-			$con->[7] = q{};
-		}
-		elsif ( $con->[4] =~ / Plan: \s ab /ox ) {
-			push( @{ $hash->{extra} }, splice( @{$con}, 4, 1 ) );
-		}
-
-		foreach my $extra ( splice( @{$con}, 8, -1 ) ) {
-			push( @{ $hash->{extra} }, $extra );
-		}
-
-		$hash->{departure_time} = $con->[0];
-
-		# always "ab"           $con->[1];
-		$hash->{departure_stop} = $con->[2];
-		$hash->{train_line}     = $con->[3];
-		$hash->{arrival_time}   = $con->[4];
-
-		# always "an"                $con->[5];
-		$hash->{arrival_stop}      = $con->[6];
-		$hash->{train_destination} = $con->[7];
-
-		push( @elements, $hash );
-	}
-
-	return Travel::Routing::DE::VRR::Route->new(@elements);
-}
-
 sub new {
 	my ( $obj, %conf ) = @_;
 
@@ -502,6 +395,18 @@ sub new {
 	return $ref;
 }
 
+sub new_from_xml {
+	my ( $class, %opt ) = @_;
+
+	my $self = { xml_reply => $opt{xml} };
+
+	bless( $self, $class );
+
+	$self->parse();
+
+	return $self;
+}
+
 sub submit {
 	my ( $self, %conf ) = @_;
 
@@ -515,14 +420,148 @@ sub submit {
 			http_response => $response, );
 	}
 
-	# XXX (workaround)
-	# The content actually is iso-8859-1. But HTML::Message doesn't actually
-	# decode character strings when they have that encoding. However, it
-	# doesn't check for latin-1, which is an alias for iso-8859-1.
-
-	$self->{html_reply} = $response->decoded_content( charset => 'latin-1' );
+	$self->{xml_reply} = $response->decoded_content;
 
 	$self->parse();
+
+	return;
+}
+
+sub itddate_str {
+	my ( $self, $node ) = @_;
+
+	return sprintf( '%02d.%02d.%04d',
+		$node->getAttribute('day'),
+		$node->getAttribute('month'),
+		$node->getAttribute('year') );
+}
+
+sub itdtime_str {
+	my ( $self, $node ) = @_;
+
+	return sprintf( '%02d:%02d',
+		$node->getAttribute('hour'),
+		$node->getAttribute('minute') );
+}
+
+sub parse_part {
+	my ( $self, $route ) = @_;
+
+	my $xp_route = XML::LibXML::XPathExpression->new(
+		'./itdPartialRouteList/itdPartialRoute');
+	my $xp_dep
+	  = XML::LibXML::XPathExpression->new('./itdPoint[@usage="departure"]');
+	my $xp_arr
+	  = XML::LibXML::XPathExpression->new('./itdPoint[@usage="arrival"]');
+	my $xp_date = XML::LibXML::XPathExpression->new('./itdDateTime/itdDate');
+	my $xp_time = XML::LibXML::XPathExpression->new('./itdDateTime/itdTime');
+	my $xp_via  = XML::LibXML::XPathExpression->new('./itdStopSeq/itdPoint');
+
+	my $xp_sdate
+	  = XML::LibXML::XPathExpression->new('./itdDateTimeTarget/itdDate');
+	my $xp_stime
+	  = XML::LibXML::XPathExpression->new('./itdDateTimeTarget/itdTime');
+	my $xp_mot   = XML::LibXML::XPathExpression->new('./itdMeansOfTransport');
+	my $xp_delay = XML::LibXML::XPathExpression->new('./itdRBLControlled');
+	my $xp_info
+	  = XML::LibXML::XPathExpression->new('./itdInfoTextList/infoTextListElem');
+
+	my $xp_fare
+	  = XML::LibXML::XPathExpression->new('./itdFare/itdSingleTicket');
+
+	my @route_parts;
+
+	my $info = {
+		duration     => $route->getAttribute('publicDuration'),
+		vehicle_time => $route->getAttribute('vehicleTime'),
+	};
+
+	my $e_fare = ( $route->findnodes($xp_fare) )[0];
+
+	if ($e_fare) {
+		$info->{ticket_type} = $e_fare->getAttribute('unitsAdult');
+		$info->{fare_adult}  = $e_fare->getAttribute('fareAdult');
+		$info->{fare_child}  = $e_fare->getAttribute('fareChild');
+		$info->{ticket_text} = $e_fare->textContent;
+	}
+
+	for my $e ( $route->findnodes($xp_route) ) {
+
+		my $e_dep    = ( $e->findnodes($xp_dep) )[0];
+		my $e_arr    = ( $e->findnodes($xp_arr) )[0];
+		my $e_ddate  = ( $e_dep->findnodes($xp_date) )[0];
+		my $e_dtime  = ( $e_dep->findnodes($xp_time) )[0];
+		my $e_dsdate = ( $e_dep->findnodes($xp_sdate) )[0];
+		my $e_dstime = ( $e_dep->findnodes($xp_stime) )[0];
+		my $e_adate  = ( $e_arr->findnodes($xp_date) )[0];
+		my $e_atime  = ( $e_arr->findnodes($xp_time) )[0];
+		my $e_asdate = ( $e_arr->findnodes($xp_sdate) )[0];
+		my $e_astime = ( $e_arr->findnodes($xp_stime) )[0];
+		my $e_mot    = ( $e->findnodes($xp_mot) )[0];
+		my $e_delay  = ( $e->findnodes($xp_delay) )[0];
+		my @e_info   = $e->findnodes($xp_info);
+
+		my $delay = $e_delay ? $e_delay->getAttribute('delayMinutes') : 0;
+
+		my $hash = {
+			delay              => $delay,
+			departure_date     => $self->itddate_str($e_ddate),
+			departure_time     => $self->itdtime_str($e_dtime),
+			departure_sdate    => $self->itddate_str($e_dsdate),
+			departure_stime    => $self->itdtime_str($e_dstime),
+			departure_stop     => $e_dep->getAttribute('name'),
+			departure_platform => $e_dep->getAttribute('platformName'),
+			train_line         => $e_mot->getAttribute('name'),
+			train_destination  => $e_mot->getAttribute('destination'),
+			arrival_date       => $self->itddate_str($e_adate),
+			arrival_time       => $self->itdtime_str($e_atime),
+			arrival_sdate      => $self->itddate_str($e_asdate),
+			arrival_stime      => $self->itdtime_str($e_astime),
+			arrival_stop       => $e_arr->getAttribute('name'),
+			arrival_platform   => $e_arr->getAttribute('platformName'),
+		};
+
+		for my $key ( keys %{$hash} ) {
+			$hash->{$key} = decode( 'UTF-8', $hash->{$key} );
+		}
+
+		for my $ve ( $e->findnodes($xp_via) ) {
+			my $e_vdate = ( $ve->findnodes($xp_date) )[-1];
+			my $e_vtime = ( $ve->findnodes($xp_time) )[-1];
+
+			if ( not( $e_vdate and $e_vtime )
+				or ( $e_vdate->getAttribute('weekday') == -1 ) )
+			{
+				next;
+			}
+
+			my $name = decode( 'UTF-8', $ve->getAttribute('name') );
+			my $platform = $ve->getAttribute('platformName');
+
+			if ( $name ~~ [ $hash->{departure_stop}, $hash->{arrival_stop} ] ) {
+				next;
+			}
+
+			push(
+				@{ $hash->{via} },
+				[
+					$self->itddate_str($e_vdate),
+					$self->itdtime_str($e_vtime),
+					$name,
+					$platform
+				]
+			);
+		}
+
+		$hash->{extra} = [ map { decode( 'UTF-8', $_->textContent ) } @e_info ];
+
+		push( @route_parts, $hash );
+	}
+
+	push(
+		@{ $self->{routes} },
+		Travel::Routing::DE::VRR::Route->new( $info, @route_parts )
+	);
 
 	return;
 }
@@ -530,16 +569,22 @@ sub submit {
 sub parse {
 	my ($self) = @_;
 
-	my $raw_cons = $self->parse_initial;
+	my $tree = $self->{tree}
+	  = XML::LibXML->load_xml( string => $self->{xml_reply}, );
 
-	for my $raw_con ( @{$raw_cons} ) {
-		push( @{ $self->{routes} }, $self->parse_pretty($raw_con) );
+	my $xp_element = XML::LibXML::XPathExpression->new(
+		'//itdItinerary/itdRouteList/itdRoute');
+	my $xp_odv = XML::LibXML::XPathExpression->new('//itdOdv');
+
+	for my $odv ( $tree->findnodes($xp_odv) ) {
+		$self->check_ambiguous($odv);
 	}
 
-	$self->check_ambiguous();
-	$self->check_no_connections();
+	for my $part ( $tree->findnodes($xp_element) ) {
+		$self->parse_part($part);
+	}
 
-	if ( @{$raw_cons} == 0 ) {
+	if ( @{ $self->{routes} } == 0 ) {
 		Travel::Routing::DE::VRR::Exception::NoData->throw();
 	}
 
@@ -547,45 +592,56 @@ sub parse {
 }
 
 sub check_ambiguous {
-	my ($self) = @_;
-	my $tree = $self->{tree};
+	my ( $self, $tree ) = @_;
 
-	my $xp_select = XML::LibXML::XPathExpression->new('//select');
-	my $xp_option = XML::LibXML::XPathExpression->new('./option');
+	my $xp_place = XML::LibXML::XPathExpression->new('./itdOdvPlace');
+	my $xp_name  = XML::LibXML::XPathExpression->new('./itdOdvName');
 
-	foreach my $select ( @{ $tree->findnodes($xp_select) } ) {
+	my $xp_place_elem = XML::LibXML::XPathExpression->new('./odvPlaceElem');
+	my $xp_name_elem  = XML::LibXML::XPathExpression->new('./odvNameElem');
 
-		my $post_key = $select->getAttribute('name');
-		my @possible;
+	my $e_place = ( $tree->findnodes($xp_place) )[0];
+	my $e_name  = ( $tree->findnodes($xp_name) )[0];
 
-		foreach my $val ( $select->findnodes($xp_option) ) {
-			push( @possible, $val->textContent );
-		}
-		my $err_text = join( q{, }, @possible );
+	if ( not( $e_place and $e_name ) ) {
+		cluck('skipping ambiguity check - itdOdvPlace/itdOdvName missing');
+		return;
+	}
 
+	my $s_place = $e_place->getAttribute('state');
+	my $s_name  = $e_name->getAttribute('state');
+
+	if ( $s_place eq 'list' ) {
 		Travel::Routing::DE::VRR::Exception::Ambiguous->throw(
-			post_key      => $post_key,
-			possibilities => $err_text,
+			post_key      => 'place',
+			possibilities => join( q{ | },
+				map { decode( 'UTF-8', $_->textContent ) }
+				  @{ $e_place->findnodes($xp_place_elem) } )
+		);
+	}
+	if ( $s_name eq 'list' ) {
+		Travel::Routing::DE::VRR::Exception::Ambiguous->throw(
+			post_key      => 'name',
+			possibilities => join( q{ | },
+				map { decode( 'UTF-8', $_->textContent ) }
+				  @{ $e_name->findnodes($xp_name_elem) } )
 		);
 	}
 
-	return;
-}
-
-sub check_no_connections {
-	my ($self) = @_;
-	my $tree = $self->{tree};
-
-	my $xp_err_img = XML::LibXML::XPathExpression->new(
-		'//td/img[@src="images/ausrufezeichen.jpg"]');
-
-	my $err_node = $tree->findnodes($xp_err_img)->[0];
-
-	if ($err_node) {
-		my $text = $err_node->parentNode->parentNode->textContent;
-		Travel::Routing::DE::VRR::Exception::NoConnections->throw(
-			error => $text, );
+	if ( $s_place eq 'notidentified' ) {
+		Travel::Routing::DE::VRR::Exception::Setup->throw(
+			option => 'place',
+			error  => 'unknown place (typo?)'
+		);
 	}
+	if ( $s_name eq 'notidentified' ) {
+		Travel::Routing::DE::VRR::Exception::Setup->throw(
+			option => 'name',
+			error  => 'unknown name (typo?)'
+		);
+	}
+
+	# 'identified' and 'empty' are ok
 
 	return;
 }
@@ -602,7 +658,7 @@ __END__
 
 =head1 NAME
 
-Travel::Routing::DE::VRR - inofficial interface to the efa.vrr.de German itinerary service
+Travel::Routing::DE::VRR - unofficial interface to the efa.vrr.de German itinerary service
 
 =head1 SYNOPSIS
 
@@ -627,7 +683,7 @@ Travel::Routing::DE::VRR - inofficial interface to the efa.vrr.de German itinera
 
 =head1 VERSION
 
-version 1.06
+version 2.00
 
 =head1 DESCRIPTION
 
@@ -636,7 +692,7 @@ You pass it the start/stop of your journey, maybe a time and a date and more
 details, and it returns the up-to-date scheduled connections between those two
 stops.
 
-It uses B<LWP::USerAgent> and B<XML::LibXML> for this.
+It uses B<LWP::UserAgent> and B<XML::LibXML> for this.
 
 =head1 METHODS
 

@@ -14,25 +14,31 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA256
 
-SHA1 e6c7882f6fb75c4f9c7b13e82ce1b2ca38525cb9 Build.PL
-SHA1 5df5d44e0549c337ad402202b301620cdc68340b Changelog
-SHA1 15cd7a402be0302966ee102933ada2a054fd7a9f MANIFEST
-SHA1 37418adfd3ea4eb46d55335ee24f6dfd065cce67 META.yml
+SHA1 7c20c00b01824e65798b9c20d90b545f62a6c391 Build.PL
+SHA1 5f54b4d53d21bd187ccd253bb3b0662d1d493cd7 Changelog
+SHA1 0f690bfa86755a9a77d16fd8504d4e15c18cc088 MANIFEST
+SHA1 93cd5af43562258d4ada7671f80071920138442d META.json
+SHA1 f0fc51477999ca51314608a354dea3acb321c238 META.yml
 SHA1 9aaebade9f604ff5ae10ccd84313812a9257b3a0 README
-SHA1 5eb787d64d7afecd75e0aa05c484d6bab793a6fb bin/efa
-SHA1 ff65d2c51da8d96ba013b1aacd39b41b5b72ff4b lib/Travel/Routing/DE/VRR.pm
+SHA1 a67a84550fcb26d33928ea24cc3a42723ae640ee bin/efa
+SHA1 60014716b96edcd31a2eb2d429834e09b5d801f8 lib/Travel/Routing/DE/VRR.pm
 SHA1 9b1c542399628731f8ef50f586b55beb776d2ac9 lib/Travel/Routing/DE/VRR/Exception.pod
-SHA1 fcc88b7d2c45b437b4c66eebf131dab3836a8e85 lib/Travel/Routing/DE/VRR/Route.pm
-SHA1 4a3f590db446f08add9e5b75ed6ce39c6b4db410 lib/Travel/Routing/DE/VRR/Route/Part.pm
+SHA1 3e65ca672e14b866f9096179c83f3a3bf1d3870b lib/Travel/Routing/DE/VRR/Route.pm
+SHA1 51ea0fd73f7618b7f6324aa9ce920c14c7f5984f lib/Travel/Routing/DE/VRR/Route/Part.pm
 SHA1 261db543570571077efcef95de8bb1ed54e2ca9e provides/zsh/completions/_efa
 SHA1 6cfaebdb4d57688b8ac50f3e840a99a48c15457b t/00-compile-pm.t
 SHA1 3adfc7da6082f15051da7fbda884723388738b61 t/01-compile-pl.t
 SHA1 fd251ffc56ca6e52020c906b61158f78b035679d t/10-pod.t
 SHA1 5cde4ac432254478c2b0e23731dfa3e7623cdc37 t/20-vrr.t
+SHA1 435f29a4e2f70f2d444ed476f9dd4f15a89610a1 t/21-vrr.t
 SHA1 03c61137db01ab6c66d6d57c6de800033e8f2966 t/in/ambiguous
+SHA1 7f75ab59522856d704efb6e94d3d76bf830b26b0 t/in/e_alf_d_hbf.xml
 SHA1 b090ebff2ae34df32f307c0a3cd5b90b7140044a t/in/e_hbf_b_hbf.ice
+SHA1 c9bbc91ea2a9412a0710ac51b3b3aa1170d4e737 t/in/e_hbf_b_hbf.xml
 SHA1 2653e00afa657bcaa7983046856314b3dfd2f485 t/in/e_hbf_du_hbf.ice
+SHA1 acf8aadf2536de7c4ee297b9e3be110efb9e6a05 t/in/e_hbf_k_hbf.xml
 SHA1 90fb6ff0cfe39ec7a4ed7eec2c48c62ca21a637c t/in/e_hbf_mh_hbf
+SHA1 52c4bdb38ab8fc19dc4c8d30ecbcca3e4267cce1 t/in/e_hbf_mh_hbf.xml
 SHA1 45c2836cb02fda0befc7c014aa1e91fd849f08c7 t/in/e_martinstr_e_florastr
 SHA1 ae32311fc3fcc472bc8e8d859c334863c0e2b0ce t/in/e_werden_e_hbf
 SHA1 17b18a70d24e307826c7701b6ed38bb9e470de5c t/in/invalid_input
@@ -47,17 +53,17 @@ SHA1 a5f60da1ae99a74c798a8aa25dc92d8e469176fd t/out/e_werden_e_hbf
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBCAAGBQJOdPmXAAoJEBANW/tRZuAFPRwP/3nFPpcRhOEgteFKU5I+IzdX
-fFDrRyabVRsH1mH7+H4CSGHbf3GOpXJcssAS3RD+n8tPzAGJqSDL15D2mvGL2Iw8
-I9gNr+iQlumupGacqcXAwMjQDQfCaMsTDQ3eDT6TpubWsFFtBRIRUxypgZMInNhC
-0oBgFsYc86TFIplip3xdzcoUZo1ZtLmKw1+fQB51Sp1Tg1sY9epRAFp8u7hklInO
-CEexpQxOTYm0C1c/YYjfq7jUFeC5f4TiEuBvsS6ZJA8Ip80xWW20ctAulCD7rpe6
-b5j8n0fJXhau9Ovsazvf2g1zskRphFZZmfniPpfv5r9URO3oiY02LhavE+kWwLSX
-56WaiKtpUU70AAGAxOlfWSRHqHNUamTtmeUdWZ+cBpiwuzg9Btvb0pNyPMUSWr0r
-7+yb6oOEOcQkjyFyPmF323ZWJO4xwLqAYOfPUsvU0WnJbOC1FXwjG9P5KeIgCDA7
-EfHCHMbq2UI0wECZcqfpmyBs8hEfSi9ByRenkvBy6vhnzfO2/bn+tx17q3BltcmJ
-KXApZy09QzPdMV79BS2SefUsRcUG8dh8YfL7/LvjiZuayo0sexw1dukx+wvFpX2m
-fBJ+PZhgww4sjLdYaglaUA249t5sAd2f/Db0pjau1O0iUIhiIKVAHO75EffMgghK
-E5VcN6qfTnvyIbFvmWUV
-=qPNR
+iQIcBAEBCAAGBQJO5Kb3AAoJEBANW/tRZuAFy+cP+wUXso05dCCVuNkiB0hoEiIt
+j/0GnPO90JOVNMMqL6LKrbjJjPgaqc8kLDVBVkTWSAcACzT5hQSeW8n/8Ek+buCr
+6hbYECtv12j+iZBuG7hc090l3CHYBUKaB2MfQtK0rDSmDhd5niVYqARWuQA2uBwn
+MXyrXdFG8es9rP6g4Ligv+k2tcYiyIbyzElG2CMZv3IUAIVmjcXCG6oVKitjAU56
+FOYKdMKJMtCtlepkGR1GonK9Iau2zEWL9XBj14naImbT/jh6agGkb9KnMtews3A8
+9vDCnJV7SERC5c7nM2XsU9QYsPIv0yW5zimnU/0DIyhtYAyAARcLyNYx1S4NXgGp
+U0O6kAgc6D+UgqaPCbzLzvp8BXcWaagKM2EHff1W64TOxAvWJWyqIZ9iwZ2klx1y
+9aLZ8zbcZOm9y/nONrJ0NGrhHCwfzvyVYrJG+1dU7KJ5GX12yMp0CRxgv1r6DBi1
+ZRqlFLLrxiWJHHvPpKBI28GoGj1AjssN6UPB5gD1yMeXwim4sRT3VS+dMRgpnNkS
+wdoMXXi/qQ6pBM2fVdo3LdZkrRfmCesZkQdksjnQYqR9m+wD3ytLBnLaquUKsYEB
+U6mN8YoNxFvpKIYiJ5VRta+XZmxwWF/M2uJpOtc/dztTJMZwt7pf+oDRAv2isKYm
+bf55DZcPxfG46U+1tjyh
+=G/vQ
 -----END PGP SIGNATURE-----
