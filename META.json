@@ -42,17 +42,17 @@
    "provides" : {
       "Travel::Routing::DE::VRR" : {
          "file" : "lib/Travel/Routing/DE/VRR.pm",
-         "version" : "2.01"
+         "version" : "2.02"
       },
       "Travel::Routing::DE::VRR::Route" : {
          "file" : "lib/Travel/Routing/DE/VRR/Route.pm",
-         "version" : "2.01"
+         "version" : "2.02"
       },
       "Travel::Routing::DE::VRR::Route::Part" : {
          "file" : "lib/Travel/Routing/DE/VRR/Route/Part.pm",
-         "version" : "2.01"
+         "version" : "2.02"
       }
    },
    "release_status" : "stable",
-   "version" : "2.01"
+   "version" : "2.02"
 }

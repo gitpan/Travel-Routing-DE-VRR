@@ -37,7 +37,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '2.01';
+our $VERSION = '2.02';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -411,6 +411,7 @@ sub submit {
 	my ( $self, %conf ) = @_;
 
 	$self->{ua} = LWP::UserAgent->new(%conf);
+	$self->{ua}->env_proxy;
 
 	my $response = $self->{ua}
 	  ->post( 'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2', $self->{post} );
@@ -683,7 +684,7 @@ Travel::Routing::DE::VRR - unofficial interface to the efa.vrr.de German itinera
 
 =head1 VERSION
 
-version 2.01
+version 2.02
 
 =head1 DESCRIPTION
 
@@ -845,6 +846,8 @@ It is best not to pass Unicode characters to B<Travel::Routing::DE::VRR>.
 =item * Travel::Routing::DE::VRR::Exception(3pm)
 
 =item * Travel::Routing::DE::VRR::Route(3pm)
+
+=item * L<WWW::EFA> is another implementation, using L<Moose>.
 
 =back
 
