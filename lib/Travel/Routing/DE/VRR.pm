@@ -7,7 +7,7 @@ use 5.010;
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use Carp qw(cluck);
-use Encode qw(decode);
+use Encode qw(decode encode);
 use Travel::Routing::DE::VRR::Route;
 use LWP::UserAgent;
 use XML::LibXML;
@@ -39,7 +39,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '2.03';
+our $VERSION = '2.04';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -235,6 +235,9 @@ sub place {
 			error  => 'Need >= three elements'
 		);
 	}
+
+	$place = encode( 'ISO-8859-15', $place );
+	$stop  = encode( 'ISO-8859-15', $stop );
 
 	$type //= 'stop';
 
@@ -686,7 +689,7 @@ Travel::Routing::DE::VRR - unofficial interface to the efa.vrr.de German itinera
 
 =head1 VERSION
 
-version 2.03
+version 2.04
 
 =head1 DESCRIPTION
 
@@ -839,7 +842,7 @@ Travel::Routing::DE::VRR::Exception(3pm) object.
 
 =head1 BUGS AND LIMITATIONS
 
-It is best not to pass Unicode characters to B<Travel::Routing::DE::VRR>.
+None known.
 
 =head1 SEE ALSO
 
@@ -855,7 +858,7 @@ It is best not to pass Unicode characters to B<Travel::Routing::DE::VRR>.
 
 =head1 AUTHOR
 
-Copyright (C) 2009-2011 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>
+Copyright (C) 2009-2014 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>
 
 =head1 LICENSE
 
