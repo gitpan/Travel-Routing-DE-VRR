@@ -7,27 +7,27 @@ use utf8;
 
 use Encode qw(decode);
 use File::Slurp qw(slurp);
-use Test::More tests => 74;
+use Test::More tests => 82;
 
 BEGIN {
-	use_ok('Travel::Routing::DE::VRR');
+	use_ok('Travel::Routing::DE::EFA');
 }
-require_ok('Travel::Routing::DE::VRR');
+require_ok('Travel::Routing::DE::EFA');
 
 my $xml = slurp('t/in/e_alf_d_hbf.xml');
 
-my $routing = Travel::Routing::DE::VRR->new_from_xml( xml => $xml );
+my $routing = Travel::Routing::DE::EFA->new_from_xml( efa_url => 'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2', xml => $xml );
 
-isa_ok( $routing, 'Travel::Routing::DE::VRR' );
+isa_ok( $routing, 'Travel::Routing::DE::EFA' );
 can_ok( $routing, 'routes' );
 
 for my $r ( $routing->routes ) {
-	isa_ok( $r, 'Travel::Routing::DE::VRR::Route' );
+	isa_ok( $r, 'Travel::Routing::DE::EFA::Route' );
 	can_ok( $r,
 		qw(duration parts ticket_type fare_adult fare_child vehicle_time) );
 
 	for my $c ( $r->parts ) {
-		isa_ok( $c, 'Travel::Routing::DE::VRR::Route::Part' );
+		isa_ok( $c, 'Travel::Routing::DE::EFA::Route::Part' );
 		can_ok(
 			$c, qw(
 			  arrival_stop arrival_platform arrival_stop_and_platform
@@ -52,6 +52,10 @@ my ( $c0, $c1 ) = $r0->parts;
 
 is( $c0->delay, 0, 'r0,0: delay' );
 is_deeply( [ $c0->extra ], [], 'r0,0: extra' );
+is_deeply( [ $c0->departure_routemaps ], ['http://efa.vrr.de/vrr/FILELOAD?Filename=dwa_4ED23486C.pdf'], 'r0,0: departure_routemaps');
+is_deeply( [ $c0->departure_stationmaps ], [], 'r0,0: departure_stationmaps');
+is_deeply( [ $c0->arrival_routemaps ], ['http://efa.vrr.de/vrr/FILELOAD?Filename=dwa_4ED23486D.pdf'], 'r0,0: arrival_routemaps');
+is_deeply( [ $c0->arrival_stationmaps ], ['http://efa.vrr.de/download/envmaps/vrr/09289_e_hbf_1.htm'], 'r0,0: arrival_stationmaps');
 is( $c0->train_line, decode( 'UTF-8', 'Straßenbahn 107' ), 'r0,0: line' );
 is( $c0->train_destination,  'Essen Hanielstr. Schleife', 'r0,0: dest' );
 is( $c0->departure_stop,     'Essen Alfredusbad',         'r0,0: dstop' );
@@ -84,6 +88,10 @@ is_deeply(
 	[ decode( 'UTF-8', 'Fahrradmitnahme begrenzt möglich' ) ],
 	'r0,1: extra'
 );
+is_deeply( [ $c1->departure_routemaps ], ['http://efa.vrr.de/vrr/FILELOAD?Filename=dwa_4ED23486D.pdf'], 'r0,0: departure_routemaps');
+is_deeply( [ $c1->departure_stationmaps ], ['http://efa.vrr.de/download/envmaps/vrr/09289_e_hbf_1.htm'], 'r0,0: departure_stationmaps');
+is_deeply( [ $c1->arrival_routemaps ], ['http://efa.vrr.de/vrr/FILELOAD?Filename=dwa_4ED23486E.pdf'], 'r0,0: arrival_routemaps');
+is_deeply( [ $c1->arrival_stationmaps ], ['http://efa.vrr.de/download/envmaps/vrr/18235_d_hbf_1.htm'], 'r0,0: arrival_stationmaps');
 is( $c1->train_line,         'R-Bahn RE1',         'r0,1: line' );
 is( $c1->train_destination,  'Aachen, Hbf',        'r0,1: dest' );
 is( $c1->departure_stop,     'Essen Hauptbahnhof', 'r0,1: dstop' );

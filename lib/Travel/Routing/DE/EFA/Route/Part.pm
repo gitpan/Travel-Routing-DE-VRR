@@ -1,4 +1,4 @@
-package Travel::Routing::DE::VRR::Route::Part;
+package Travel::Routing::DE::EFA::Route::Part;
 
 use strict;
 use warnings;
@@ -6,14 +6,14 @@ use 5.010;
 
 use parent 'Class::Accessor';
 
-our $VERSION = '2.04';
+our $VERSION = '2.06';
 
-Travel::Routing::DE::VRR::Route::Part->mk_ro_accessors(
+Travel::Routing::DE::EFA::Route::Part->mk_ro_accessors(
 	qw(arrival_platform arrival_stop
-	  arrival_date arrival_time arrival_sdate arrival_stime
-	  delay departure_platform departure_stop
-	  departure_date departure_time departure_sdate departure_stime
-	  train_line train_destination
+	  arrival_date arrival_time arrival_sdate arrival_stime delay
+	  departure_platform
+	  departure_stop departure_date departure_time departure_sdate
+	  departure_stime train_line train_destination
 	  )
 );
 
@@ -25,6 +25,18 @@ sub new {
 	return bless( $ref, $obj );
 }
 
+sub arrival_routemaps {
+	my ($self) = @_;
+
+	return @{ $self->{arrival_routemaps} };
+}
+
+sub arrival_stationmaps {
+	my ($self) = @_;
+
+	return @{ $self->{arrival_stationmaps} };
+}
+
 sub arrival_stop_and_platform {
 	my ($self) = @_;
 
@@ -33,6 +45,18 @@ sub arrival_stop_and_platform {
 		  sprintf( '%s: %s', $self->get(qw(arrival_stop arrival_platform)) );
 	}
 	return $self->arrival_stop;
+}
+
+sub departure_routemaps {
+	my ($self) = @_;
+
+	return @{ $self->{departure_routemaps} };
+}
+
+sub departure_stationmaps {
+	my ($self) = @_;
+
+	return @{ $self->{departure_stationmaps} };
 }
 
 sub departure_stop_and_platform {
@@ -65,7 +89,7 @@ __END__
 
 =head1 NAME
 
-Travel::Routing::DE::VRR::Route::Part - Describes one connection between two
+Travel::Routing::DE::EFA::Route::Part - Describes one connection between two
 points, without interchanges
 
 =head1 SYNOPSIS
@@ -86,15 +110,15 @@ points, without interchanges
 
 =head1 VERSION
 
-version 2.04
+version 2.06
 
 =head1 DESCRIPTION
 
-B<Travel::Routing::DE::VRR::Route::Part> holds one specific connection (without
+B<Travel::Routing::DE::EFA::Route::Part> holds one specific connection (without
 interchanges) between two points.  It specifies the start/stop point and time,
 the train line and its destination, and optional additional data.
 
-It is usually obtained by a call to Travel::Routing::DE::VRR::Route(3pm)'s
+It is usually obtained by a call to Travel::Routing::DE::EFA::Route(3pm)'s
 B<parts> method.
 
 =head1 METHODS
@@ -134,6 +158,17 @@ Scheduled arrival date in DD.MM.YYYY format
 
 Scheduled arrival time in HH:MM format
 
+=item $part->arrival_routemaps
+
+List of URLs, may be empty. Each URL poinst to a transfer map for the arrival
+station, usually outlining fow to transfer from this train to the next one
+(if applicable).
+
+=item $part->arrival_stationmaps
+
+List of URLs, may be empty. Each URL points to an HTML map of the arrival
+station.
+
 =item $part->delay
 
 delay in minutes, 0 if unknown
@@ -165,6 +200,17 @@ Scheduled departure date in DD.MM.YYYY format
 =item $part->departure_stime
 
 Scheduled departure time in HH:MM format
+
+=item $part->departure_routemaps
+
+List of URLs, may be empty. Each URL points to a PDF a transfer map for the
+departure station, usually outlining fow to transfer from thep previous train
+(if applicable) to this one.
+
+=item $part->departure_stationmaps
+
+List of URLs, may be empty. Each URL poinst to an HTML map of the departure
+station.
 
 =item $part->extra
 
@@ -206,7 +252,7 @@ $part->via does not work reliably.
 
 =head1 SEE ALSO
 
-Travel::Routing::DE::VRR(3pm), Class::Accessor(3pm).
+Travel::Routing::DE::EFA(3pm), Class::Accessor(3pm).
 
 =head1 AUTHOR
 
