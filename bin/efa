@@ -15,7 +15,7 @@ use Travel::Routing::DE::EFA;
 use Exception::Class;
 use Getopt::Long qw/:config no_ignore_case/;
 
-our $VERSION = '2.06';
+our $VERSION = '2.07';
 my $ignore_info = 'Fahrradmitnahme';
 my $efa;
 my $efa_url = 'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2';
@@ -157,9 +157,11 @@ GetOptions(
 	$opt,
 	qw{
 		arrive|a=s
+		auto-url|discover-and-print|A
 		bike|b
 		date|d=s
 		depart=s
+		discover|D
 		efa-url|u=s
 		exclude|e=s@
 		extended-info|E
@@ -220,30 +222,70 @@ if ( $opt->{exclude} ) {
 	$opt->{exclude} = [ split( /,/, join( ',', @{ $opt->{exclude} } ) ) ];
 }
 
-$efa = eval {
-	Travel::Routing::DE::EFA->new(
-		efa_url => $efa_url,
+if ( $opt->{discover} or $opt->{'auto-url'} ) {
+	for my $pair ( Travel::Routing::DE::EFA::get_efa_urls() ) {
+		my ( $url, $name ) = @{$pair};
+		$efa = eval {
+			Travel::Routing::DE::EFA->new(
+				efa_url => $url,
 
-		origin      => [ @from, $from_type ],
-		destination => [ @to,   $to_type ],
-		via => ( @via ? [ @via, $via_type ] : undef ),
+				origin      => [ @from, $from_type ],
+				destination => [ @to,   $to_type ],
+				via => ( @via ? [ @via, $via_type ] : undef ),
 
-		arrival_time   => $opt->{arrive},
-		departure_time => $opt->{depart} // $opt->{time},
-		date           => $opt->{date},
-		exclude        => $opt->{exclude},
-		train_type     => $opt->{include},
-		with_bike      => $opt->{bike},
+				arrival_time   => $opt->{arrive},
+				departure_time => $opt->{depart} // $opt->{time},
+				date           => $opt->{date},
+				exclude        => $opt->{exclude},
+				train_type     => $opt->{include},
+				with_bike      => $opt->{bike},
 
-		select_interchange_by => $opt->{prefer},
-		use_near_stops        => $opt->{proximity},
-		walk_speed            => $opt->{'walk-speed'},
-		max_interchanges      => $opt->{'max-change'},
-		num_results           => $opt->{'num-connections'},
+				select_interchange_by => $opt->{prefer},
+				use_near_stops        => $opt->{proximity},
+				walk_speed            => $opt->{'walk-speed'},
+				max_interchanges      => $opt->{'max-change'},
+				num_results           => $opt->{'num-connections'},
 
-		lwp_options => { timeout => $opt->{timeout} },
-	);
-};
+				lwp_options => { timeout => $opt->{timeout} },
+			);
+		};
+		if ($efa) {
+			if ( $opt->{'auto-url'} ) {
+				last;
+			}
+			printf( "%-55s (%s)\n", $url, $name );
+		}
+	}
+	if ( $opt->{'discover'} ) {
+		exit 0;
+	}
+}
+else {
+	$efa = eval {
+		Travel::Routing::DE::EFA->new(
+			efa_url => $efa_url,
+
+			origin      => [ @from, $from_type ],
+			destination => [ @to,   $to_type ],
+			via => ( @via ? [ @via, $via_type ] : undef ),
+
+			arrival_time   => $opt->{arrive},
+			departure_time => $opt->{depart} // $opt->{time},
+			date           => $opt->{date},
+			exclude        => $opt->{exclude},
+			train_type     => $opt->{include},
+			with_bike      => $opt->{bike},
+
+			select_interchange_by => $opt->{prefer},
+			use_near_stops        => $opt->{proximity},
+			walk_speed            => $opt->{'walk-speed'},
+			max_interchanges      => $opt->{'max-change'},
+			num_results           => $opt->{'num-connections'},
+
+			lwp_options => { timeout => $opt->{timeout} },
+		);
+	};
+}
 
 check_for_error($@);
 
@@ -299,15 +341,18 @@ efa - unofficial efa.vrr.de command line client
 
 =head1 VERSION
 
-version 2.06
+version 2.07
 
 =head1 DESCRIPTION
 
 B<efa> is a command line client for the L<http://efa.vrr.de> web interface.
 It sends the specified information to the online form and displays the results.
 
-It should be noted that B<efa>, although using the web interface of a local
-transport association, is able to look up connections all over Germany.
+It also supports other EFA services than L<http://efa.vrr.de>.
+B<efa> has a builtin list of EFA entry points which can be used with the
+B<-A> and B<-D> options. You can also specify a custom URL using B<-u>.
+However, the default EFA service is sufficient in most cases (even ICE
+connections all over germany).
 
 =head1 OPTIONS
 
@@ -340,9 +385,24 @@ Journey end time (overrides --time/--depart)
 
 Journey date
 
+=item B<-A>|B<--auto-url>|B<--discover-and-print>
+
+Probe all known EFA entry points for the specified connection. Print the first
+result which was not an error.
+
+Note that this may take a while and will not neccessarily return the best
+result.  Also, using this option by default is not recommended, as it puts
+EFA services under considerable additional load.
+
 =item B<-b>|B<--bike>
 
 Choose connections allowing to carry a bike
+
+=item B<-D>|B<--discover>
+
+Probe all known EFA entry points for the specified connection. No routes are
+returned in this case. Instead, B<efa> will print the URLs and names of all
+entry points which did not return an error.
 
 =item B<-e>|B<--exclude> I<transports>
 
@@ -440,14 +500,6 @@ Travel::Routing::DE::EFA(3pm) for alternatives.
 =item B<--timeout> I<seconds>
 
 Set timeout for HTTP requests. Default: 60 seconds.
-
-=item B<--post> I<key>=I<value>
-
-Add I<key> with I<value> to the HTTP POST request sent to the EFA server.
-This can be used to use setting B<efa> does not yet cover, like
-C<--post lineRestriction=400> to also show IC and ICE trains.
-Note that B<--post> will be overridden by the standard efa options, such as
-B<--time>
 
 =item B<-v>|B<--version>
 

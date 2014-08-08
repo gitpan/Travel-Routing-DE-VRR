@@ -40,7 +40,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '2.06';
+our $VERSION = '2.07';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -555,6 +555,13 @@ sub parse_xml_part {
 		my @e_amap_rm = $e_arr->findnodes($xp_mapitem_rm);
 		my @e_amap_sm = $e_arr->findnodes($xp_mapitem_sm);
 
+		# not all EFA services distinguish between scheduled and realtime
+		# data. Set sdate / stime to date / time when not provided.
+		$e_dsdate //= $e_ddate;
+		$e_dstime //= $e_dtime;
+		$e_asdate //= $e_adate;
+		$e_astime //= $e_atime;
+
 		my $delay = $e_delay ? $e_delay->getAttribute('delayMinutes') : 0;
 
 		my ( @dep_rms, @dep_sms, @arr_rms, @arr_sms );
@@ -735,6 +742,45 @@ sub routes {
 	return @{ $self->{routes} };
 }
 
+# static
+sub get_efa_urls {
+	return (
+		[
+			'http://efa.ivb.at/ivb/XSLT_TRIP_REQUEST2',
+			'Innsbrucker Verkehsbetriebe'
+		],
+		[
+			'http://efa.svv-info.at/sbs/XSLT_TRIP_REQUEST2',
+			'Salzburger Verkehrsverbund'
+		],
+		[
+			'http://efa.vor.at/wvb/XSLT_TRIP_REQUEST2',
+			'Verkehrsverbund Ost-Region'
+		],
+		[
+			'http://efaneu.vmobil.at/vvv/XSLT_TRIP_REQUEST2',
+			'Vorarlberger Verkehrsverbund'
+		],
+		[
+			'http://fahrplan.verbundlinie.at/stv/XSLT_TRIP_REQUEST2',
+			'Verkehsverbund Steiermark'
+		],
+		[ 'http://www.linzag.at/static/XSLT_TRIP_REQUEST2', 'Linz AG' ],
+		[
+			'http://212.114.197.7/vgnExt_oeffi/XML_TRIP_REQUEST2',
+			'Verkehrsverbund Grossraum Nuernberb'
+		],
+		[
+			'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2',
+			'Verkehrsverbund Rhein-Ruhr'
+		],
+		[
+			'http://www2.vvs.de/vvs/XSLT_TRIP_REQUEST2',
+			'Verkehrsverbund Stuttgart'
+		],
+	);
+}
+
 1;
 
 __END__
@@ -767,7 +813,7 @@ Travel::Routing::DE::EFA - unofficial interface to EFA-based itinerary services
 
 =head1 VERSION
 
-version 2.06
+version 2.07
 
 =head1 DESCRIPTION
 
@@ -794,7 +840,30 @@ Valid hash keys and their values are:
 =item B<efa_url> => I<efa_url>
 
 Mandatory.  Sets the entry point to the EFA itinerary service.
-Known URLs are:
+The following URLs (grouped by country) are known.  A service marked with [!]
+is not completely supported yet and may not work at all.
+
+=over
+
+=item * Austria
+
+=over
+
+=item * L<http://efa.ivb.at/ivb/XSLT_TRIP_REQUEST2> (Innsbrucker Verkehsbetriebe)
+
+=item * L<http://efa.svv-info.at/sbs/XSLT_TRIP_REQUEST2> (Salzburger Verkehrsverbund)
+
+=item * L<http://efa.vor.at/wvb/XSLT_TRIP_REQUEST2> (Verkehrsverbund Ost-Region)
+
+=item * L<http://efaneu.vmobil.at/vvv/XSLT_TRIP_REQUEST2> (Vorarlberger Verkehrsverbund)
+
+=item * L<http://fahrplan.verbundlinie.at/stv/XSLT_TRIP_REQUEST2> (Verkehsverbund Steiermark) B<[!]>
+
+=item * L<http://www.linzag.at/static/XSLT_TRIP_REQUEST2> (Linz AG) B<[!]>
+
+=back
+
+=item * Germany
 
 =over
 
@@ -803,6 +872,8 @@ Known URLs are:
 =item * L<http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2> (Verkehrsverbund Rhein-Ruhr)
 
 =item * L<http://www2.vvs.de/vvs/XSLT_TRIP_REQUEST2> (Verkehrsverbund Stuttgart)
+
+=back
 
 =back
 
@@ -922,6 +993,18 @@ The following methods act like the arguments to B<new>. See there.
 =item $efa->walk_speed(I<$speed>)
 
 =item $efa->with_bike(I<$bool>)
+
+=back
+
+=head2 STATIC METHODS
+
+=over
+
+=item Travel::Status::DE::VRR::get_efa_urls()
+
+Returns a list of known EFA entry points. Each list element is a reference to
+an array consisting of two strings. The first one is the URL (as passed to
+B<efa_url>), the second describes the entity to which this URL belongs.
 
 =back
 
