@@ -23,9 +23,14 @@ Module::Build->new(
 		'Class::Accessor' => 0,
 		'Exception::Class' => 0,
 		'Getopt::Long' => 0,
+		'List::Util' => 0,
 		'LWP::UserAgent' => 0,
 		'XML::LibXML' => 0,
 	},
 	sign => 1,
-
+	meta_merge => {
+		resources => {
+			repository => 'https://github.com/derf/Travel-Routing-DE-VRR'
+		}
+	},
 )->create_build_script();

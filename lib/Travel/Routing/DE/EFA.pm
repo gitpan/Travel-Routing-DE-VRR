@@ -40,7 +40,7 @@ use Exception::Class (
 	},
 );
 
-our $VERSION = '2.07';
+our $VERSION = '2.08';
 
 sub set_time {
 	my ( $self, %conf ) = @_;
@@ -745,39 +745,51 @@ sub routes {
 # static
 sub get_efa_urls {
 	return (
-		[
-			'http://efa.ivb.at/ivb/XSLT_TRIP_REQUEST2',
-			'Innsbrucker Verkehsbetriebe'
-		],
-		[
-			'http://efa.svv-info.at/sbs/XSLT_TRIP_REQUEST2',
-			'Salzburger Verkehrsverbund'
-		],
-		[
-			'http://efa.vor.at/wvb/XSLT_TRIP_REQUEST2',
-			'Verkehrsverbund Ost-Region'
-		],
-		[
-			'http://efaneu.vmobil.at/vvv/XSLT_TRIP_REQUEST2',
-			'Vorarlberger Verkehrsverbund'
-		],
-		[
-			'http://fahrplan.verbundlinie.at/stv/XSLT_TRIP_REQUEST2',
-			'Verkehsverbund Steiermark'
-		],
-		[ 'http://www.linzag.at/static/XSLT_TRIP_REQUEST2', 'Linz AG' ],
-		[
-			'http://212.114.197.7/vgnExt_oeffi/XML_TRIP_REQUEST2',
-			'Verkehrsverbund Grossraum Nuernberb'
-		],
-		[
-			'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2',
-			'Verkehrsverbund Rhein-Ruhr'
-		],
-		[
-			'http://www2.vvs.de/vvs/XSLT_TRIP_REQUEST2',
-			'Verkehrsverbund Stuttgart'
-		],
+		{
+			url       => 'http://efa.ivb.at/ivb/XSLT_TRIP_REQUEST2',
+			name      => 'Innsbrucker Verkehsbetriebe',
+			shortname => 'IVB',
+		},
+		{
+			url       => 'http://efa.svv-info.at/sbs/XSLT_TRIP_REQUEST2',
+			name      => 'Salzburger Verkehrsverbund',
+			shortname => 'SVV',
+		},
+		{
+			url       => 'http://efa.vor.at/wvb/XSLT_TRIP_REQUEST2',
+			name      => 'Verkehrsverbund Ost-Region',
+			shortname => 'VOR',
+		},
+		{
+			url       => 'http://efaneu.vmobil.at/vvv/XSLT_TRIP_REQUEST2',
+			name      => 'Vorarlberger Verkehrsverbund',
+			shortname => 'VVV',
+		},
+		{
+			url  => 'http://fahrplan.verbundlinie.at/stv/XSLT_TRIP_REQUEST2',
+			name => 'Verkehsverbund Steiermark',
+			shortname => 'Verbundlinie',
+		},
+		{
+			url       => 'http://www.linzag.at/static/XSLT_TRIP_REQUEST2',
+			name      => 'Linz AG',
+			shortname => 'LinzAG',
+		},
+		{
+			url       => 'http://212.114.197.7/vgnExt_oeffi/XML_TRIP_REQUEST2',
+			name      => 'Verkehrsverbund Grossraum Nuernberg',
+			shortname => 'VGN',
+		},
+		{
+			url       => 'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2',
+			name      => 'Verkehrsverbund Rhein-Ruhr',
+			shortname => 'VRR',
+		},
+		{
+			url       => 'http://www2.vvs.de/vvs/XSLT_TRIP_REQUEST2',
+			name      => 'Verkehrsverbund Stuttgart',
+			shortname => 'VVS',
+		},
 	);
 }
 
@@ -802,18 +814,18 @@ Travel::Routing::DE::EFA - unofficial interface to EFA-based itinerary services
 	for my $route ( $efa->routes ) {
 		for my $part ( $route->parts ) {
 			printf(
-				"%s at %s -> %s at %s, via %s to %s",
+				"%s at %s -> %s at %s, via %s to %s\n",
 				$part->departure_time, $part->departure_stop,
 				$part->arrival_time,   $part->arrival_stop,
 				$part->train_line,     $part->train_destination,
 			);
 		}
-		print "\n\n";
+		print "\n";
 	}
 
 =head1 VERSION
 
-version 2.07
+version 2.08
 
 =head1 DESCRIPTION
 
@@ -905,7 +917,7 @@ Journey start time.  Default: now
 
 =item B<date> => I<DD.MM.>[I<YYYY>]
 
-Journey date.  Default: tdoay
+Journey date.  Default: today
 
 =item B<exclude> => \@exclude
 
@@ -1000,11 +1012,20 @@ The following methods act like the arguments to B<new>. See there.
 
 =over
 
-=item Travel::Status::DE::VRR::get_efa_urls()
+=item Travel::Routing::DE::EFA::get_efa_urls()
 
-Returns a list of known EFA entry points. Each list element is a reference to
-an array consisting of two strings. The first one is the URL (as passed to
-B<efa_url>), the second describes the entity to which this URL belongs.
+Returns a list of known EFA entry points. Each list element is a hashref with
+the following elements.
+
+=over
+
+=item B<url>: service URL as passed to B<efa_url>
+
+=item B<name>: Name of the entity operating this service
+
+=item B<shortname>: Short name of the entity
+
+=back
 
 =back
 

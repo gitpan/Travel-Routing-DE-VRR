@@ -14,8 +14,9 @@ use Encode qw(decode);
 use Travel::Routing::DE::EFA;
 use Exception::Class;
 use Getopt::Long qw/:config no_ignore_case/;
+use List::Util qw(first);
 
-our $VERSION = '2.07';
+our $VERSION = '2.08';
 my $ignore_info = 'Fahrradmitnahme';
 my $efa;
 my $efa_url = 'http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2';
@@ -82,7 +83,7 @@ sub handle_efa_exception {
 		exit 5;
 	}
 
-	printf STDERR ( "Uncatched exception: %s\n%s", ref($e), $e->trace );
+	printf STDERR ( "Uncaught exception: %s\n%s", ref($e), $e->trace );
 	exit 10;
 }
 
@@ -169,12 +170,14 @@ GetOptions(
 		full-route|f
 		help|h
 		ignore-info|I:s
+		include|i=s
+		list|l
 		maps|M
 		max-change|m=i
 		num-connections|n=i
 		prefer|P=s
 		proximity|p
-		include|i=s
+		service|s=s
 		time|t=s
 		timeout=i
 		to=s@{2}
@@ -184,6 +187,15 @@ GetOptions(
 	},
 ) or show_help(1);
 #>>>
+
+if ( $opt->{list} ) {
+	printf( "%-40s %-14s %s\n\n", 'service', 'abbr. (-s)', 'url (-u)' );
+	for my $service ( Travel::Routing::DE::EFA::get_efa_urls() ) {
+		printf( "%-40s %-14s %s\n", @{$service}{qw(name shortname url)} );
+	}
+	exit 0;
+}
+
 if ( not( @from and @to ) ) {
 	if ( @ARGV == 4 ) {
 		( @from[ 0, 1 ], @to[ 0, 1 ] ) = @ARGV;
@@ -222,12 +234,25 @@ if ( $opt->{exclude} ) {
 	$opt->{exclude} = [ split( /,/, join( ',', @{ $opt->{exclude} } ) ) ];
 }
 
+if ( $opt->{service} ) {
+	my $service = first { lc($_->{shortname}) eq lc($opt->{service}) }
+	Travel::Routing::DE::EFA::get_efa_urls();
+	if ( not $service ) {
+		printf STDERR (
+			"Error: Unknown service '%s'. See 'efa -l' for a "
+			  . "list of supported service names\n",
+			$opt->{service}
+		);
+		exit 1;
+	}
+	$efa_url = $service->{url};
+}
+
 if ( $opt->{discover} or $opt->{'auto-url'} ) {
-	for my $pair ( Travel::Routing::DE::EFA::get_efa_urls() ) {
-		my ( $url, $name ) = @{$pair};
+	for my $service ( Travel::Routing::DE::EFA::get_efa_urls() ) {
 		$efa = eval {
 			Travel::Routing::DE::EFA->new(
-				efa_url => $url,
+				efa_url => $service->{url},
 
 				origin      => [ @from, $from_type ],
 				destination => [ @to,   $to_type ],
@@ -253,7 +278,11 @@ if ( $opt->{discover} or $opt->{'auto-url'} ) {
 			if ( $opt->{'auto-url'} ) {
 				last;
 			}
-			printf( "%-55s (%s)\n", $url, $name );
+			printf(
+				"%s / %s (%s)\n   ->  efa -s %s %s\n\n",
+				@{$service}{qw(name shortname url shortname)},
+				join( ' ', map { "'$_'" } @ARGV ),
+			);
 		}
 	}
 	if ( $opt->{'discover'} ) {
@@ -341,18 +370,19 @@ efa - unofficial efa.vrr.de command line client
 
 =head1 VERSION
 
-version 2.07
+version 2.08
 
 =head1 DESCRIPTION
 
 B<efa> is a command line client for the L<http://efa.vrr.de> web interface.
 It sends the specified information to the online form and displays the results.
 
-It also supports other EFA services than L<http://efa.vrr.de>.
-B<efa> has a builtin list of EFA entry points which can be used with the
-B<-A> and B<-D> options. You can also specify a custom URL using B<-u>.
+It also supports other EFA services than L<http://efa.vrr.de>.  B<efa> has a
+builtin list of EFA entry points which can be probed with the B<-A> and B<-D>
+options and listed with B<-l>. You can also specify a custom service using
+B<-u> I<url> or B<-s> I<name>.
 However, the default EFA service is sufficient in most cases (even ICE
-connections all over germany).
+connections all over Germany).
 
 =head1 OPTIONS
 
@@ -370,27 +400,19 @@ Arrival place
 
 Travel via this place
 
-In case you want I<stop> to be an address or "point of interest", you can set
-it to 'addr:something' or 'poi:something'.
-
-=item B<-t>|B<--time>|B<--depart> I<hh>:I<mm>
-
-Journey start time
+In all cases, if you want I<stop> to be an address or "point of interest", you
+can set it to 'addr:something' or 'poi:something'.
 
 =item B<-a>|B<--arrive> I<hh>:I<mm>
 
 Journey end time (overrides --time/--depart)
-
-=item B<-d>|B<--date> I<dd>.I<mm>.[I<yyyy>]
-
-Journey date
 
 =item B<-A>|B<--auto-url>|B<--discover-and-print>
 
 Probe all known EFA entry points for the specified connection. Print the first
 result which was not an error.
 
-Note that this may take a while and will not neccessarily return the best
+Note that this may take a while and will not necessarily return the best
 result.  Also, using this option by default is not recommended, as it puts
 EFA services under considerable additional load.
 
@@ -398,11 +420,22 @@ EFA services under considerable additional load.
 
 Choose connections allowing to carry a bike
 
+=item B<-d>|B<--date> I<dd>.I<mm>.[I<yyyy>]
+
+Journey date
+
 =item B<-D>|B<--discover>
 
 Probe all known EFA entry points for the specified connection. No routes are
 returned in this case. Instead, B<efa> will print the URLs and names of all
 entry points which did not return an error.
+
+=item B<-u>|B<--efa-url> I<url>
+
+URL to the EFA entry point, defaults to
+L<http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2>.  Depending on your location, some
+I<url>s may contain more specific data than others. See
+Travel::Routing::DE::EFA(3pm) and the B<-l> option for alternatives.
 
 =item B<-e>|B<--exclude> I<transports>
 
@@ -420,14 +453,46 @@ Display duration, ticket class and price for each route (if available)
 Display intermediate stops (with time and platform) of each train.  Note that
 these are not always available.
 
-=item B<-m>|B<--max-change> I<number>
+=item B<-I>|B<--ignore-info> [ I<regex> ]
 
-Print connections with at most I<number> interchanges
+Ignore additional information matching I<regex> (default: /Fahrradmitnahme/)
+
+If I<regex> is not supplied, removes the default regex (-E<gt> nothing will be ignored)
+
+=item B<-i>|B<--include> I<type>
+
+Include connections using trains of type I<type>, where I<type> may be:
+
+=over
+
+=item * local (default)
+
+only take local trains ("Verbund-/Nahverkehrslinien"). Slow, but the cheapest
+method if you're not traveling long distance
+
+=item * ic
+
+Local trains + IC
+
+=item * ice
+
+All trains (local + IC + ICE)
+
+=back
+
+=item B<-l>|B<--list>
+
+List supported EFA services wit their URLs (see B<-u>) and abbreviations
+(see B<-s>).
 
 =item B<-M>|B<--maps>
 
 Output links to maps of transfer paths and transfer stations where
 available.
+
+=item B<-m>|B<--max-change> I<number>
+
+Print connections with at most I<number> interchanges
 
 =item B<-n>|B<--num-connections> I<number>
 
@@ -458,44 +523,14 @@ Prefer connections with less walking (at interchanges)
 
 Take stops close to the stop/start into account and possibly use them instead
 
-=item B<-i>|B<--include> I<type>
+=item B<-s>|B<--service> I<name>
 
-Include connections using trains of type I<type>, where I<type> may be:
+Shortname of the EFA entry point. See Travel::Routing::DE::EFA(3pm) and
+the B<-l> option for a list of services.
 
-=over
+=item B<-t>|B<--time>|B<--depart> I<hh>:I<mm>
 
-=item * local (default)
-
-only take local trains ("Verbund-/Nahverkehrslinien"). Slow, but the cheapest
-method if you're not travelling long distance
-
-=item * ic
-
-Local trains + IC
-
-=item * ice
-
-All trains (local + IC + ICE)
-
-=back
-
-=item B<-w>|B<--walk-speed> I<speed>
-
-Set your walking speed to I<speed>.
-Accepted values: normal (default), fast, slow
-
-=item B<-I>|B<--ignore-info> [ I<regex> ]
-
-Ignore additional information matching I<regex> (default: /Fahrradmitnahme/)
-
-If I<regex> is not supplied, removes the default regex (-E<gt> nothing will be ignored)
-
-=item B<-u>|B<--efa-url> I<url>
-
-URL to the EFA entry point, defaults to
-L<http://efa.vrr.de/vrr/XSLT_TRIP_REQUEST2>.  Depending on your location, some
-I<url>s may contain more specific data than others. See
-Travel::Routing::DE::EFA(3pm) for alternatives.
+Journey start time
 
 =item B<--timeout> I<seconds>
 
@@ -504,6 +539,11 @@ Set timeout for HTTP requests. Default: 60 seconds.
 =item B<-v>|B<--version>
 
 Print version information
+
+=item B<-w>|B<--walk-speed> I<speed>
+
+Set your walking speed to I<speed>.
+Accepted values: normal (default), fast, slow
 
 =back
 
@@ -521,6 +561,30 @@ Print version information
 =head1 CONFIGURATION
 
 None.
+
+=head1 EXAMPLES
+
+=over
+
+=item efa Do Hbf MH Hbf
+
+Look up a connection from Dortmund (Do) Hbf to ME<uuml>lheim (MH) Hbf
+
+=item efa --include ice Essen Hbf Hamburg Dammtor
+
+Look up a connection with long-distance trains
+
+=item efa --arrive 18:00 -e zug,s-bahn -M E Wickenburgstr D Oststr
+
+Look up a connection from Essen Wickenburgstr to DE<uuml>sseldorf Oststr.
+Do not use any trains, make sure to arrive around 18:00 and print links to
+maps of all interchange stations.
+
+=item efa -s vvs Stuttgart Hbf Stuttgart Marienplatz
+
+Use the VVS (Verkehrsverbund Stuttgart) EFA service to look up a connection.
+
+=back
 
 =head1 DEPENDENCIES
 
@@ -546,8 +610,6 @@ try to calculate a route ("we recommend walking instead"), if they are close to
 each other it may or may not work.  Workaround: Request from -> via using the
 normal four-argument efa invocation, read the time, use efa -t time via via to
 to to request via -> to.
-
-None known.
 
 =head1 AUTHOR
 
